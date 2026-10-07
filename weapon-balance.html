@@ -1414,7 +1414,7 @@
             A designer does not need a number for every situation; they need a warning: <strong>"this weapon is too strong."</strong> So I turned the model's predictions into a clear rule.
           </p>
           <div class="callout">
-            <strong>Definition: a weapon is OP if, at 3 of the 4 distances, it kills in 70% or less of the typical time.</strong>
+            <strong>Definition: a weapon is OP if, at 3 of the 4 distances, it kills in 70% or less of the typical time (about 1.4× faster or more).</strong>
             "Typical" is the median kill time of all weapons in the same situation (same distance, target HP and target speed), so a 10 m fight is only compared with other 10 m fights. A weapon that dominates only one range (a specialist, like a close-range shotgun) is not flagged; one that wins almost everywhere is.
           </div>
           <div class="two-col">
@@ -1499,7 +1499,7 @@
               <label class="field"><span>Reload time (s)</span><input type="number" step="0.1" min="0" id="f-reload_time"></label>
               <label class="field"><span>Bullet speed (m/s)</span><input type="number" step="10" min="1" id="f-bullet_speed"></label>
             </div>
-            <p class="fine">The bot always dual-wields, so predictions are for two of this weapon. Results update as you type.</p>
+            <p class="fine">The bot always dual-wields, so predictions are for two of this weapon. Results update as you type. "Fast" means at least 1.4× faster than typical (kill time ≤ 70%).</p>
           </form>
 
           <div class="panel checker-result" aria-live="polite">

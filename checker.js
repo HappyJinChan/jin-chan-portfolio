@@ -81,8 +81,11 @@
       var ttk = ttkSum / SPEED.length;
       var fast = ratio <= 0.7;
       if (fast) fastCount++;
-      var pct = Math.round(ratio * 100);
-      html += "<tr><td>" + DIST[d] + " m</td><td>" + fmtTime(ttk) + "</td><td>" + pct + "% of typical time</td><td>" +
+      var speedText;
+      if (ratio < 0.95) speedText = (1 / ratio).toFixed(1) + "× faster than typical";
+      else if (ratio > 1.05) speedText = ratio.toFixed(1) + "× slower than typical";
+      else speedText = "About the same as typical";
+      html += "<tr><td>" + DIST[d] + " m</td><td>" + fmtTime(ttk) + "</td><td>" + speedText + "</td><td>" +
         (fast ? '<span class="pill pill-a">Yes</span>' : '<span class="pill pill-c">No</span>') + "</td></tr>";
     }
     rows.innerHTML = html;
