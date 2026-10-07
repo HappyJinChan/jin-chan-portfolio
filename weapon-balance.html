@@ -1032,6 +1032,30 @@
     }
     .callout strong { color: var(--text); display: block; margin-bottom: 4px; }
     .table-scroll { overflow-x: auto; }
+
+    /* ===== OP checker ===== */
+    .checker { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 22px; align-items: start; }
+    .preset-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+    .preset-label { font-weight: 700; color: var(--muted); margin-right: 4px; }
+    .preset-row .button { cursor: pointer; font-size: 0.85rem; padding: 9px 14px; }
+    .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+    .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.88rem; font-weight: 700; color: var(--panel-2); }
+    .field input {
+      font: inherit; font-weight: 500; color: var(--text); padding: 10px 12px; min-height: 44px; box-sizing: border-box;
+      border-radius: 12px; border: 1px solid var(--line-strong); background: var(--white);
+    }
+    .field input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+    .verdict { display: flex; flex-direction: column; gap: 4px; border-radius: 18px; padding: 18px 20px; background: rgba(255,255,255,0.8); border: 1px solid var(--line); margin-bottom: 6px; }
+    .verdict-label { font-family: "Orbitron", "Bahnschrift", sans-serif; font-weight: 800; font-size: 2rem; line-height: 1.1; color: var(--panel-2); }
+    .verdict-text { color: var(--muted); }
+    .verdict.is-op { background: linear-gradient(135deg, var(--panel), var(--panel-3)); border-color: transparent; }
+    .verdict.is-op .verdict-label { color: var(--gold); }
+    .verdict.is-op .verdict-text { color: rgba(255,255,255,0.85); }
+    .verdict.is-ok .verdict-label { color: var(--panel-2); }
+    .th-sub { font-family: "Noto Sans TC", sans-serif; font-size: 0.7rem; letter-spacing: 0; text-transform: none; color: var(--muted); font-weight: 500; }
+    .warn { color: #8a5a00 !important; }
+    @media (max-width: 980px) { .checker { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) { .field-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -1051,6 +1075,7 @@
         <a href="#story">Story</a>
         <a href="#process">Process</a>
         <a href="#findings">Findings</a>
+        <a href="#try">Try It</a>
         <a href="index.html#projects">All Projects</a>
       </nav>
     </div>
@@ -1070,7 +1095,7 @@
 
           <div class="hero-actions">
             <a class="button primary" href="#process">See the Process</a>
-            <a class="button" href="#findings">Jump to Findings</a>
+            <a class="button" href="#try">Try the Model</a>
           </div>
 
           <div class="hero-note">
@@ -1382,9 +1407,46 @@
           <p class="fine">Measured gap in log efficiency between slow-firing and fast-firing weapons (no model involved). At 50 m, accurate weapons lose the most from firing fast; inaccurate ones barely notice.</p>
         </article>
 
-        <!-- STEP 11 -->
+        <!-- STEP 11: OP -->
+        <article class="panel step" id="op">
+          <div class="step-head"><span class="step-no">11</span><h3>Flag "OP" weapons before anyone plays them</h3></div>
+          <p>
+            A designer does not need a number for every situation; they need a warning: <strong>"this weapon is too strong."</strong> So I turned the model's predictions into a clear rule.
+          </p>
+          <div class="callout">
+            <strong>Definition: a weapon is OP if, at 3 of the 4 distances, it kills in 70% or less of the typical time.</strong>
+            "Typical" is the median kill time of all weapons in the same situation (same distance, target HP and target speed), so a 10 m fight is only compared with other 10 m fights. A weapon that dominates only one range (a specialist, like a close-range shotgun) is not flagged; one that wins almost everywhere is.
+          </div>
+          <div class="two-col">
+            <div>
+              <p>
+                <strong>How it was tested:</strong> for each weapon, a model that had never seen it predicted its kill time in all 36 situations, and the rule was applied to those predictions. The same rule was then applied to the bot's real fights to check the answer.
+              </p>
+              <div class="number-row" style="margin-top: 16px;">
+                <div><span class="num">89%</span><span class="lbl">of flagged weapons were really OP</span></div>
+                <div><span class="num">77%</span><span class="lbl">of real OP weapons were caught</span></div>
+                <div><span class="num">92%</span><span class="lbl">of all 120 weapons judged correctly</span></div>
+              </div>
+            </div>
+            <div>
+              <div class="table-scroll"><table class="data-table">
+                <thead><tr><th></th><th>Really OP</th><th>Really normal</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Model says OP</strong></td><td class="win">24</td><td>3</td></tr>
+                  <tr><td><strong>Model says normal</strong></td><td>7</td><td class="win">86</td></tr>
+                </tbody>
+              </table></div>
+              <p class="fine">120 weapon variants, each predicted by a model that never saw it (5-fold cross-validation by weapon). Stricter rules (50% or 60%, or 4 of 4 distances) agreed less with reality, so 70% at 3 of 4 distances was kept.</p>
+            </div>
+          </div>
+          <p class="fine">
+            Note: "typical" here means typical for this test pool of randomised weapons, which is why 22% of them are flagged. None of the three original weapons is flagged. In a real game, the reference should be the official weapon list.
+          </p>
+        </article>
+
+        <!-- STEP 12 -->
         <article class="panel step">
-          <div class="step-head"><span class="step-no">11</span><h3>Decide when to stop collecting data</h3></div>
+          <div class="step-head"><span class="step-no">12</span><h3>Decide when to stop collecting data</h3></div>
           <div class="two-col">
             <figure class="fig">
               <img src="images/weapon-balance/11-learning-curve.png" alt="Learning curve of Model A and Model B" loading="lazy" />
@@ -1400,6 +1462,59 @@
             </div>
           </div>
         </article>
+      </div>
+    </section>
+
+    <!-- ================= TRY IT ================= -->
+    <section id="try">
+      <div class="container section-shell">
+        <div class="section-head">
+          <div>
+            <div class="section-label">Try It</div>
+            <h2>Is Your Weapon OP?</h2>
+          </div>
+          <p>
+            Enter a weapon's stats and the trained model predicts how fast it kills at each distance, compared with a typical weapon, then applies the OP rule from Step 11. It runs entirely in your browser.
+          </p>
+        </div>
+
+        <div class="checker">
+          <form class="panel checker-form" id="wb-form" onsubmit="return false;">
+            <div class="preset-row">
+              <span class="preset-label">Start from:</span>
+              <button type="button" class="button" data-preset="Assault Rifle">Assault Rifle</button>
+              <button type="button" class="button" data-preset="SMG">SMG</button>
+              <button type="button" class="button" data-preset="Shotgun">Shotgun</button>
+            </div>
+            <div class="field-grid">
+              <label class="field"><span>Damage per bullet</span><input type="number" step="0.5" id="f-physical_damage"></label>
+              <label class="field"><span>Crit chance (0–1)</span><input type="number" step="0.01" min="0" max="1" id="f-crit_chance"></label>
+              <label class="field"><span>Crit multiplier</span><input type="number" step="0.05" min="1" id="f-crit_multiplier"></label>
+              <label class="field"><span>Pellets per shot</span><input type="number" step="1" min="1" id="f-bullets_per_shot"></label>
+              <label class="field"><span>Time between shots (s)</span><input type="number" step="0.01" min="0.01" id="f-time_between_shooting"></label>
+              <label class="field"><span>Spread (°)</span><input type="number" step="0.1" min="0" id="f-spread"></label>
+              <label class="field"><span>Recoil per shot</span><input type="number" step="0.01" min="0" id="f-recoil_per_shooting"></label>
+              <label class="field"><span>Recoil control</span><input type="number" step="10" id="f-recoil_control"></label>
+              <label class="field"><span>Magazine size</span><input type="number" step="1" min="1" id="f-magazine_size"></label>
+              <label class="field"><span>Reload time (s)</span><input type="number" step="0.1" min="0" id="f-reload_time"></label>
+              <label class="field"><span>Bullet speed (m/s)</span><input type="number" step="10" min="1" id="f-bullet_speed"></label>
+            </div>
+            <p class="fine">The bot always dual-wields, so predictions are for two of this weapon. Results update as you type.</p>
+          </form>
+
+          <div class="panel checker-result" aria-live="polite">
+            <div class="verdict" id="wb-verdict">
+              <span class="verdict-label" id="wb-verdict-label">—</span>
+              <span class="verdict-text" id="wb-verdict-text">Pick a preset or enter stats.</span>
+            </div>
+            <div class="table-scroll"><table class="data-table">
+              <thead><tr><th>Distance</th><th>Predicted kill time<br><span class="th-sub">150 HP target</span></th><th>vs typical</th><th>Fast?</th></tr></thead>
+              <tbody id="wb-rows"></tbody>
+            </table></div>
+            <p class="fine" id="wb-formula"></p>
+            <p class="fine warn" id="wb-warn"></p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1507,5 +1622,7 @@
       </div>
     </div>
   </footer>
+<script src="weapon-model.js"></script>
+<script src="checker.js"></script>
 </body>
 </html>
