@@ -1239,6 +1239,43 @@
               </div>
             </div>
           </article>
+
+          <article class="project-card">
+            <div class="card-image-wrap">
+              <a href="weapon-balance.html"><img class="card-image" src="images/weapon-balance/00-shooting-range.jpg" alt="Bradamant firing at moving targets in the Diva Ex Machina shooting range" loading="lazy" /></a>
+            </div>
+            <div class="card-body">
+              <div class="meta">Personal Project · Game Analytics &amp; Machine Learning</div>
+              <h3>Diva Ex Machina: Weapon Balance</h3>
+              <p>
+                A bot plays the shooting range of my own Unity game, and a Random Forest with SHAP explains which weapon stats really drive damage, and where. The model cut the prediction error of the standard DPS formula from ×6.0 to ×1.6.
+              </p>
+              <div class="tag-row">
+                <span class="tag">Unity</span>
+                <span class="tag">Python</span>
+                <span class="tag">Random Forest</span>
+                <span class="tag">SHAP</span>
+              </div>
+
+              <details class="assignment-details">
+                <summary>Project Overview</summary>
+                <div class="assignment-details-content">
+                  <p><strong>Problem:</strong> The usual DPS formula assumes every bullet hits, so it cannot tell a designer how a weapon performs at range or against moving targets.</p>
+                  <p><strong>Data:</strong> 1,475 fights by an automated C# bot, covering 120 weapon variants across 4 distances, 3 target HP levels and 3 target speeds.</p>
+                  <p><strong>Key Findings:</strong></p>
+                  <ul>
+                    <li>Close range is decided by damage and pellets; from 20 m on, spread takes over</li>
+                    <li>At 50 m, accurate weapons lose the most from firing fast because of recoil build-up</li>
+                    <li>Weapon recoil becomes significantly important in long-range combat</li>
+                  </ul>
+                </div>
+              </details>
+
+              <div class="project-links">
+                <a class="text-link" href="weapon-balance.html">View Project</a>
+              </div>
+            </div>
+          </article>
         </div>
       </div>
     </section>

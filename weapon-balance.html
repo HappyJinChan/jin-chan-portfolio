@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weapon Balance with Machine Learning | Jin Chan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #edf2f8;
+      --bg-deep: #dfe7f3;
+      --surface: rgba(255, 255, 255, 0.78);
+      --surface-strong: #f8fbff;
+      --panel: #0f2142;
+      --panel-2: #16305f;
+      --panel-3: #203f78;
+      --text: #13233f;
+      --muted: #51627e;
+      --line: rgba(20, 35, 63, 0.16);
+      --line-strong: rgba(20, 35, 63, 0.28);
+      --blue: #3c6ee8;
+      --blue-soft: #dbe7ff;
+      --gold: #d8b45c;
+      --gold-soft: #fff4d8;
+      --white: #ffffff;
+      --shadow: 0 24px 50px rgba(11, 26, 53, 0.10);
+      --shadow-soft: 0 10px 24px rgba(11, 26, 53, 0.08);
+      --radius: 22px;
+      --radius-sm: 14px;
+      --max-width: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      line-height: 1.65;
+      background:
+        radial-gradient(circle at top right, rgba(60, 110, 232, 0.10), transparent 24%),
+        radial-gradient(circle at 0% 20%, rgba(216, 180, 92, 0.10), transparent 18%),
+        linear-gradient(180deg, #f5f8fd 0%, var(--bg) 40%, var(--bg-deep) 100%);
+      min-height: 100vh;
+    }
+
+
+    h1, h2, h3,
+    .brand-text strong,
+    .nav-links a,
+    .button,
+    .eyebrow,
+    .section-label,
+    .panel-title,
+    .meta,
+    .assignment-details summary,
+    .text-link,
+    .contact-item strong {
+      font-family: "Orbitron", "Bahnschrift", "Arial Narrow", sans-serif;
+      letter-spacing: 0.02em;
+    }
+
+
+    body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(16, 33, 66, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 33, 66, 0.018) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.22), rgba(0,0,0,0.04));
+  z-index: -1;
+}
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .container {
+      width: min(92%, var(--max-width));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(245, 248, 253, 0.78);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(15, 33, 66, 0.12);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 16px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 70px;
+      height: 70px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(222,232,248,0.78));
+      border: 1px solid rgba(15, 33, 66, 0.16);
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 0 62%, rgba(216, 180, 92, 0.18) 62% 100%);
+      pointer-events: none;
+    }
+
+    .brand-mark img {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-text strong {
+      display: block;
+      font-size: 1.85rem;
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-text span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      transition: 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      text-decoration: none;
+      border-color: rgba(60, 110, 232, 0.22);
+      background: rgba(255, 255, 255, 0.65);
+    }
+
+    .hero {
+      padding: 28px 0 22px;
+    }
+
+    .hero-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.68fr) minmax(260px, 0.68fr);
+  gap: 16px;
+  align-items: start;
+}
+
+    .hero-main,
+    .hero-side,
+    .panel,
+    .project-card,
+    .activity-card,
+    .contact-card,
+    .footer-box {
+      backdrop-filter: blur(8px);
+      background: var(--surface);
+      border: 1px solid rgba(15, 33, 66, 0.14);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-main {
+  position: relative;
+  border-radius: 34px;
+  padding: 30px 30px 22px;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(130deg, rgba(255,255,255,0.94) 0%, rgba(233,241,252,0.95) 62%, rgba(217, 228, 247, 0.96) 100%);
+}
+
+    .hero-watermark {
+  position: absolute;
+  top: 40px;
+  right: 24px;
+  width: min(28%, 220px);
+  aspect-ratio: 1 / 1;
+  background-image: url('images/LOGO.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 0;
+}
+
+    .hero-main > * {
+  position: relative;
+  z-index: 1;
+}
+
+    .hero-main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 28%;
+  height: 100%;
+  background: linear-gradient(140deg, rgba(22, 48, 95, 0.08), rgba(60, 110, 232, 0.14));
+  clip-path: polygon(34% 0, 100% 0, 100% 100%, 6% 100%);
+  z-index: -1;
+}
+
+    .hero-main::after {
+  content: "";
+  position: absolute;
+  inset: auto auto 0 0;
+  width: 136px;
+  height: 5px;
+  background: linear-gradient(90deg, var(--gold), var(--blue));
+  border-radius: 0 999px 999px 0;
+}
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(60, 110, 232, 0.18);
+      color: var(--panel-2);
+      font-weight: 800;
+      font-size: 0.78rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, var(--gold), #f4d68f);
+      box-shadow: 0 0 0 3px rgba(216, 180, 92, 0.14);
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      line-height: 1.15;
+    }
+
+    .hero-main h1 {
+  margin-top: 12px;
+  font-size: clamp(2.35rem, 4.2vw, 4.1rem);
+  max-width: 11.2ch;
+  letter-spacing: -0.04em;
+  line-height: 1.03;
+}
+
+    .hero-main p {
+  max-width: 54ch;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 0.97rem;
+}
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(19, 35, 63, 0.14);
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--text);
+      font-weight: 800;
+      box-shadow: var(--shadow-soft);
+      transition: 0.2s ease;
+    }
+
+    .button:hover {
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+
+    .button.primary {
+      background: linear-gradient(135deg, var(--panel-2), var(--blue));
+      color: var(--white);
+      border-color: rgba(22, 48, 95, 0.28);
+    }
+
+    .hero-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(19, 35, 63, 0.10);
+}
+
+    .hero-chip {
+  min-width: 148px;
+  flex: 1 1 148px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+    .hero-chip strong {
+  display: block;
+  color: var(--panel-2);
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+    .hero-chip span {
+  display: block;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+    .hero-side {
+  border-radius: 28px;
+  padding: 18px 18px 16px;
+  background: linear-gradient(180deg, rgba(15, 33, 66, 0.98), rgba(22, 48, 95, 0.92));
+  color: rgba(255,255,255,0.92);
+  position: relative;
+  overflow: hidden;
+  align-self: start;
+}
+
+    .hero-side::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 86px;
+  height: 86px;
+  background: radial-gradient(circle, rgba(216,180,92,0.22), transparent 68%);
+}
+
+    .hero-side::after {
+      content: "";
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      display: none;
+    }
+
+    .panel-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: rgba(219, 231, 255, 0.70);
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+
+    .hero-side h2 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  line-height: 1.35;
+}
+
+    .hero-side p {
+  color: rgba(255,255,255,0.74);
+  margin: 0 0 12px;
+  font-size: 0.92rem;
+}
+
+    .stat-list,
+.mini-list {
+  display: grid;
+  gap: 8px;
+}
+
+    .stat-item,
+.mini-item {
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  padding: 10px 11px 10px 12px;
+  border-left: 3px solid rgba(216, 180, 92, 0.85);
+}
+
+    .stat-item strong,
+.mini-item strong {
+  display: block;
+  color: rgba(255,255,255,0.76);
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+    .stat-item span,
+.mini-item span {
+  font-weight: 700;
+  color: rgba(255,255,255,0.94);
+  line-height: 1.35;
+}
+
+    section {
+      padding: 28px 0;
+    }
+
+    .section-shell {
+      display: grid;
+      gap: 22px;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: end;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .section-head h2 {
+      font-size: clamp(2rem, 3vw, 2.8rem);
+      letter-spacing: -0.03em;
+    }
+
+    .section-head p {
+      max-width: 58ch;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--panel-2);
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .section-label::before {
+      content: "";
+      width: 28px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), var(--blue));
+      border-radius: 999px;
+    }
+
+    .about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.95fr);
+  gap: 16px;
+  align-items: start;
+}
+
+    .panel {
+  border-radius: 24px;
+  padding: 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.90), rgba(247,250,255,0.82));
+}
+
+    .panel h3 {
+      font-size: 1.35rem;
+      margin-bottom: 12px;
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .about-highlight {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.94) 0%, rgba(236,243,255,0.88) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+    .about-highlight::after {
+  content: "";
+  position: absolute;
+  right: -12px;
+  bottom: -10px;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(60,110,232,0.12), transparent 70%);
+  pointer-events: none;
+}
+
+    
+.about-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.about-support p + p,
+.about-skills p + .skill-grid {
+  margin-top: 12px;
+}
+
+.about-skills {
+  position: relative;
+}
+
+.project-featured {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1.05fr);
+  align-items: center;
+}
+
+.project-featured .card-image-wrap {
+  padding: 22px 0 22px 22px;
+}
+
+.project-featured .card-body {
+  padding: 24px 28px 26px;
+}
+
+.project-featured .card-body p {
+  max-width: 62ch;
+}
+
+.project-featured .assignment-details {
+  margin-top: 20px;
+}
+
+    .tag {
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 33, 66, 0.13);
+      background: rgba(255,255,255,0.82);
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--panel-2);
+      white-space: nowrap;
+    }
+
+    .project-grid,
+    .activity-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .project-card,
+    .activity-card {
+      border-radius: 24px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(248,251,255,0.82));
+    }
+
+    .card-image-wrap {
+      position: relative;
+      padding: 18px 18px 0;
+    }
+
+    .card-image {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 18px;
+      border: 1px solid rgba(15, 33, 66, 0.12);
+      box-shadow: var(--shadow-soft);
+      background: #dfe6f2;
+    }
+
+    .card-body {
+      padding: 20px 22px 24px;
+    }
+
+    .meta {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .project-card h3,
+    .activity-card h3 {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .card-body p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 16px;
+      margin-bottom: 0;
+    }
+
+    .assignment-details {
+      margin-top: 18px;
+      border: 1px solid rgba(15, 33, 66, 0.12);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.7);
+    }
+
+    .assignment-details summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 14px 16px;
+      font-weight: 800;
+      color: var(--panel-2);
+      background: linear-gradient(180deg, rgba(236,243,255,0.86), rgba(255,255,255,0.86));
+    }
+
+    .assignment-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .assignment-details summary::before {
+      content: "+";
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      margin-right: 10px;
+      border-radius: 50%;
+      background: rgba(60,110,232,0.10);
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .assignment-details[open] summary::before {
+      content: "−";
+    }
+
+    .assignment-details-content {
+      padding: 16px 18px 18px;
+      color: var(--muted);
+      border-top: 1px solid rgba(15, 33, 66, 0.10);
+    }
+
+    .assignment-details-content p {
+      margin: 0 0 10px;
+    }
+
+    .assignment-details-content ul {
+      margin: 0 0 12px 20px;
+      padding: 0;
+    }
+
+    .assignment-details-content li + li {
+      margin-top: 4px;
+    }
+
+    .project-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .text-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      color: var(--panel-2);
+    }
+
+    .text-link::after {
+      content: "↗";
+      font-size: 0.95rem;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 22px;
+    }
+
+    .contact-card {
+      border-radius: 24px;
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.90), rgba(247,250,255,0.82));
+    }
+
+    .contact-card h3 {
+      font-size: 1.35rem;
+      margin-bottom: 8px;
+    }
+
+    .contact-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .contact-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .contact-item {
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.74);
+      border: 1px solid rgba(15, 33, 66, 0.12);
+    }
+
+    .contact-item strong {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--panel-2);
+      margin-bottom: 3px;
+    }
+
+    
+
+    
+
+    .contact-highlight {
+      position: relative;
+      overflow: hidden;
+      min-height: 340px;
+      background: linear-gradient(180deg, rgba(15, 33, 66, 0.98), rgba(27, 58, 112, 0.94));
+      color: rgba(255,255,255,0.96);
+      isolation: isolate;
+    }
+
+    .contact-highlight::before {
+      content: "";
+      position: absolute;
+      right: -10px;
+      bottom: -20px;
+      width: min(68%, 380px);
+      aspect-ratio: 1 / 1;
+      background-image: url('images/LOGO_white.png');
+      background-repeat: no-repeat;
+      background-position: bottom right;
+      background-size: contain;
+      opacity: 0.13;
+      pointer-events: none;
+      z-index: 0;
+      filter: drop-shadow(0 0 18px rgba(219, 231, 255, 0.08));
+    }
+
+    .contact-highlight::after {
+      content: "";
+      position: absolute;
+      right: 26px;
+      bottom: 26px;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(219,231,255,0.18), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .contact-highlight > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .contact-highlight p {
+      color: rgba(255,255,255,0.74);
+      max-width: 30ch;
+    }
+
+    .contact-highlight .tag {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.16);
+      color: rgba(255,255,255,0.9);
+    }
+
+    .footer {
+      padding: 18px 0 44px;
+    }
+
+    .footer-box {
+      border-radius: 20px;
+      padding: 18px 20px;
+      background: rgba(255,255,255,0.70);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .footer-box strong {
+      color: var(--panel-2);
+    }
+
+    @media (max-width: 980px) {
+      .hero-shell,
+      .about-grid,
+      .contact-grid,
+      .project-grid,
+      .activity-grid,
+      .project-featured {
+        grid-template-columns: 1fr;
+      }
+
+      .project-featured .card-image-wrap {
+        padding: 18px 18px 0;
+      }
+
+      .project-featured .card-body {
+        padding: 20px 22px 24px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .brand-mark {
+        width: 62px;
+        height: 62px;
+      }
+
+      .brand-mark img {
+        width: 48px;
+        height: 48px;
+      }
+
+      .brand-text strong {
+        font-size: 1.55rem;
+      }
+
+      .hero-main,
+      .hero-side,
+      .panel,
+      .project-card,
+      .activity-card,
+      .contact-card {
+        border-radius: 22px;
+      }
+
+      .hero-main {
+        padding: 24px 20px 22px;
+      }
+
+      .hero-watermark {
+        top: 30px;
+        right: 14px;
+        width: min(25%, 120px);
+        opacity: 0.08;
+      }
+
+      .hero-side,
+      .panel,
+      .contact-card {
+        padding: 20px;
+      }
+
+      .hero-note {
+        gap: 10px;
+      }
+
+      .section-head h2 {
+        font-size: 1.8rem;
+      }
+
+      .hero-main h1 {
+        font-size: clamp(2rem, 9vw, 2.9rem);
+      }
+
+      .project-card h3,
+      .activity-card h3 {
+        font-size: 1.35rem;
+      }
+
+      .footer-box {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  
+    /* ===== Weapon balance page additions ===== */
+    .back-row { margin-bottom: 14px; }
+    .back-row a { font-family: "Orbitron", "Bahnschrift", sans-serif; font-weight: 800; font-size: 0.85rem; color: var(--panel-2); }
+
+    .big-stat { font-family: "Orbitron", "Bahnschrift", sans-serif; font-size: 1.7rem; font-weight: 800; color: var(--gold); line-height: 1.2; display: block; }
+
+    .two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+
+    .placeholder-img {
+      width: 100%; aspect-ratio: 16 / 9; border-radius: 18px;
+      border: 1px dashed var(--line-strong); background: rgba(255,255,255,0.6);
+      display: grid; place-items: center; color: var(--muted); font-weight: 700; text-align: center; padding: 16px;
+    }
+
+    .number-row { display: flex; flex-wrap: wrap; gap: 26px; margin: 6px 0 16px; }
+    .number-row .num { font-family: "Orbitron", "Bahnschrift", sans-serif; font-weight: 800; font-size: 2rem; color: var(--panel-2); line-height: 1.1; display: block; }
+    .number-row .lbl { font-size: 0.85rem; color: var(--muted); }
+
+    .plain-list { margin: 12px 0 0 20px; padding: 0; color: var(--muted); }
+    .plain-list li + li { margin-top: 4px; }
+
+    .pipeline { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; margin-top: 14px; }
+    .pipe-step { flex: 1 1 170px; border-radius: 16px; padding: 14px 16px; background: rgba(255,255,255,0.8); border: 1px solid var(--line); }
+    .pipe-step strong { font-family: "Orbitron", "Bahnschrift", sans-serif; display: block; color: var(--panel-2); font-size: 0.9rem; margin-bottom: 2px; }
+    .pipe-step span { color: var(--muted); font-size: 0.9rem; }
+
+    .bars { display: grid; gap: 12px; margin-top: 16px; }
+    .bar-row { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 12px; align-items: center; }
+    .bar-track { display: flex; align-items: center; gap: 10px; }
+    .bar { height: 26px; border-radius: 8px; }
+    .bar-val { font-family: "Orbitron", "Bahnschrift", sans-serif; font-weight: 800; font-size: 0.9rem; }
+    .fine { font-size: 0.82rem; color: var(--muted); margin-top: 12px !important; }
+
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 0.95rem; }
+    .data-table th, .data-table td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: right; }
+    .data-table th:first-child, .data-table td:first-child { text-align: left; }
+    .data-table th { font-family: "Orbitron", "Bahnschrift", sans-serif; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--panel-2); }
+    .data-table td.win { color: var(--panel-2); font-weight: 800; }
+
+    .finding-no { font-family: "Orbitron", "Bahnschrift", sans-serif; font-weight: 800; font-size: 0.78rem; letter-spacing: 0.12em; color: #a07d22; margin-bottom: 6px; }
+    .mini-bars { display: flex; gap: 12px; align-items: flex-end; height: 120px; margin-top: 18px; }
+    .mini-bars div { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+    .mini-bars i { display: block; width: 34px; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, var(--blue), var(--panel-2)); }
+
+    .chart-svg { width: 100%; height: auto; display: block; margin-top: 10px; }
+
+    .contact-highlight ul { margin: 12px 0 0 20px; padding: 0; color: rgba(255,255,255,0.80); }
+    .contact-highlight li + li { margin-top: 6px; }
+
+    @media (max-width: 980px) {
+      .two-col, .three-col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .bar-row { grid-template-columns: 1fr; gap: 4px; }
+    }
+
+    /* ===== Step-by-step layout ===== */
+    .step { display: grid; gap: 16px; }
+    .step-head { display: flex; align-items: center; gap: 14px; }
+    .step-head h3 { margin: 0; }
+    .step-no {
+      font-family: "Orbitron", "Bahnschrift", sans-serif; font-weight: 800; font-size: 0.95rem;
+      width: 46px; height: 46px; flex-shrink: 0; border-radius: 14px; display: grid; place-items: center;
+      color: var(--white); background: linear-gradient(135deg, var(--panel-2), var(--blue));
+      box-shadow: var(--shadow-soft);
+    }
+    .two-col { align-items: start; }
+    .fig { margin: 0; }
+    .fig img { width: 100%; border-radius: 16px; border: 1px solid var(--line); background: var(--white); }
+    .fig-narrow { max-width: 760px; }
+    .fig figcaption { margin-top: 8px; font-size: 0.88rem; color: var(--muted); }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-weight: 800; font-size: 0.88rem; white-space: nowrap; }
+    .pill-a { background: var(--gold-soft); color: #7a5a12; }
+    .pill-b { background: var(--blue-soft); color: var(--panel-2); }
+    .pill-c { background: #e6e9f0; color: var(--text); }
+    .situation-table td { vertical-align: middle; }
+    .situation-table td:not(:first-child), .situation-table th:not(:first-child) { text-align: left; }
+    .callout {
+      border-radius: 16px; padding: 16px 18px; background: rgba(255,255,255,0.8);
+      border: 1px solid var(--line); border-left: 4px solid var(--gold); color: var(--muted);
+    }
+    .callout strong { color: var(--text); display: block; margin-bottom: 4px; }
+    .table-scroll { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html" style="text-decoration: none; color: inherit;">
+        <div class="brand-mark">
+          <img src="images/LOGO.png" alt="Jin Chan logo" />
+        </div>
+        <div class="brand-text">
+          <strong>Jin Chan</strong>
+          <span>Data visualization, storytelling, and interactive design</span>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#story">Story</a>
+        <a href="#process">Process</a>
+        <a href="#findings">Findings</a>
+        <a href="index.html#projects">All Projects</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <div class="container hero-shell">
+        <div class="hero-main">
+          <div class="hero-watermark" aria-hidden="true"></div>
+          <div class="eyebrow">Game Analytics · Machine Learning</div>
+          <h1 style="max-width: 15ch;">How do you know a weapon is too strong — before players do?</h1>
+          <p>
+            A bot plays the shooting range of my own Unity game, <strong>Diva Ex Machina</strong>, and a machine learning model reads the results to tell the designer which weapon stats really matter, and where.
+          </p>
+
+          <div class="hero-actions">
+            <a class="button primary" href="#process">See the Process</a>
+            <a class="button" href="#findings">Jump to Findings</a>
+          </div>
+
+          <div class="hero-note">
+            <div class="hero-chip">
+              <strong>Role</strong>
+              <span>Solo: game, bot, and analysis</span>
+            </div>
+            <div class="hero-chip">
+              <strong>Tools</strong>
+              <span>Unity, C#, Python, pandas, scikit-learn, SHAP</span>
+            </div>
+            <div class="hero-chip">
+              <strong>Data</strong>
+              <span>1,475 fights · 120 weapon variants</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="hero-side">
+          <div class="panel-title">Project at a glance</div>
+          <h2>Predicting how fast a weapon really kills.</h2>
+          <p>Typical prediction error on weapons the model never saw.</p>
+
+          <div class="stat-list">
+            <div class="stat-item">
+              <strong>Standard DPS formula</strong>
+              <span class="big-stat">off by ×6.0</span>
+            </div>
+            <div class="stat-item">
+              <strong>My model</strong>
+              <span class="big-stat">off by ×1.6</span>
+            </div>
+            <div class="stat-item">
+              <strong>Key finding</strong>
+              <span>Close range: damage and pellets. Long range: spread and recoil.</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ================= STORY ================= -->
+    <section id="story">
+      <div class="container section-shell">
+        <div class="section-head">
+          <div>
+            <div class="section-label">The Story</div>
+            <h2>Why I Built This</h2>
+          </div>
+        </div>
+
+        <div class="about-grid">
+          <article class="panel about-highlight">
+            <h3>Many weapons are fun — and hard to balance</h3>
+            <p>
+              In Diva Ex Machina, the heroine Bradamant does not rely on one all-round loadout. She switches between gear sets in battle. That variety is the heart of the combat design, and also its biggest risk: the more different the weapons, the easier it is for one of them to break the game.
+            </p>
+            <p style="margin-top: 12px;">
+              I started balancing the usual way: a damage-per-second number in a spreadsheet, then playtesting in my own shooting range. The two kept disagreeing. A weapon that looked strong on paper could be almost useless at 50 m, and every small change meant another round of manual testing.
+            </p>
+            <p style="margin-top: 12px;">
+              As a Business Analytics and AI student, I asked a different question: <strong>what if the game could test itself, and a model could tell me which stats actually matter?</strong>
+            </p>
+          </article>
+
+          <aside class="panel">
+            <h3>The questions I wanted to answer</h3>
+            <ul class="plain-list">
+              <li>How wrong is the simple DPS formula, and where?</li>
+              <li>Can a model predict a weapon's real performance before anyone plays it?</li>
+              <li>Which stat matters most at 10 m? At 50 m? Against a moving target?</li>
+              <li>When does recoil start to matter?</li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PROCESS ================= -->
+    <section id="process">
+      <div class="container section-shell">
+        <div class="section-head">
+          <div>
+            <div class="section-label">The Process</div>
+            <h2>Step by Step</h2>
+          </div>
+          <p>
+            From an empty shooting range to explained predictions. Every chart below comes straight from my analysis notebook.
+          </p>
+        </div>
+
+        <!-- STEP 1 -->
+        <article class="panel step">
+          <div class="step-head"><span class="step-no">01</span><h3>Build a bot that playtests for me</h3></div>
+          <div class="two-col">
+            <figure class="fig"><img src="images/weapon-balance/00-shooting-range.jpg" alt="Bradamant firing at moving targets in the Diva Ex Machina shooting range" /><figcaption>The bot in control of Bradamant, firing at strafing targets in the shooting range.</figcaption></figure>
+            <div>
+              <p>
+                I wrote a C# bot inside Unity that takes control of Bradamant. It picks one of three base weapons (assault rifle, SMG, shotgun), randomises its stats, and fights test targets one at a time, aiming like the game's lock-on mode. When a target dies, or after 30 seconds, the result is written to a CSV file.
+              </p>
+              <div class="number-row" style="margin-top: 16px;">
+                <div><span class="num">120</span><span class="lbl">weapon variants</span></div>
+                <div><span class="num">36</span><span class="lbl">situations</span></div>
+                <div><span class="num">~4 h</span><span class="lbl">of bot play</span></div>
+              </div>
+              <ul class="plain-list">
+                <li>11 weapon stats varied: damage, crit chance and multiplier, pellets, fire rate, spread, recoil, recoil control, magazine, reload, bullet speed</li>
+                <li>36 situations: 4 distances (10, 20, 50, 80 m) × 3 target HP (50, 150, 400) × 3 target speeds (0, 10, 15 m/s)</li>
+              </ul>
+            </div>
+          </div>
+          <details class="assignment-details">
+            <summary>What I learned building it</summary>
+            <div class="assignment-details-content">
+              <p>The first hour of data was thrown away: running the game at 2× speed made fast weapons fire slower than they should, which would have taught the model something false. The bot was restarted at normal speed.</p>
+              <p>Targets moving at 35 m/s were also removed. They change direction faster than a bullet can reach them, so no weapon could hit them, and they added no information.</p>
+            </div>
+          </details>
+        </article>
+
+        <!-- STEP 2 -->
+        <article class="panel step">
+          <div class="step-head"><span class="step-no">02</span><h3>Load and clean the data</h3></div>
+          <p>
+            The raw file had 1,501 fights. Before modelling, I checked that every row was physically possible and kept only the columns a designer can actually change.
+          </p>
+          <div class="table-scroll"><table class="data-table">
+            <thead><tr><th>Check</th><th>Rows</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>Target died before the bot fired (a stray bullet from the previous fight)</td><td>25</td><td>Removed</td></tr>
+              <tr><td>Weapon never hit the target once (DPS = 0, cannot take a log)</td><td>1</td><td>Removed</td></tr>
+              <tr><td>Target survived the 30-second limit</td><td>247 (17%)</td><td>Kept: these are real results</td></tr>
+              <tr><td>Columns the game derives from other stats (e.g. recoil ratio)</td><td>4 columns</td><td>Dropped: keep only the knobs a designer tunes</td></tr>
+            </tbody>
+          </table></div>
+          <p class="fine">Final dataset: 1,475 fights × 14 features (3 situation + 11 weapon stats).</p>
+        </article>
+
+        <!-- STEP 3 -->
+        <article class="panel step">
+          <div class="step-head"><span class="step-no">03</span><h3>Define what "real DPS" means</h3></div>
+          <p>
+            The target is <strong>effective DPS</strong> = damage dealt ÷ time taken. It works for fights that ended in a kill and for fights that hit the time limit. Because values range from almost 0 to thousands, I predict its logarithm, which turns the long tail into a near-normal shape and makes errors relative ("off by ×2") instead of absolute.
+          </p>
+          <figure class="fig">
+            <img src="images/weapon-balance/01-dps-log.png" alt="Histogram of effective DPS before and after the log transform" loading="lazy" />
+            <figcaption>Left: raw effective DPS is extremely skewed. Right: after the log transform it is usable for regression.</figcaption>
+          </figure>
+        </article>
+
+        <!-- STEP 4 -->
+        <article class="panel step">
+          <div class="step-head"><span class="step-no">04</span><h3>Test the standard formula first</h3></div>
+          <p>
+            Before any machine learning, I measured the baseline every designer uses: damage × pellets × fire rate, adjusted for crits. If a model cannot beat this, it is not worth using.
+          </p>
+          <figure class="fig fig-narrow">
+            <img src="images/weapon-balance/02-formula-error.png" alt="Bar chart of the DPS formula's typical error by distance" loading="lazy" />
+            <figcaption>The formula is fine at 10 m but is off by about ×10 at 50 m and ×29 at 80 m: it assumes every bullet hits.</figcaption>
+          </figure>
+        </article>
+
+        <!-- STEP 5 -->
+        <article class="panel step">
+          <div class="step-head"><span class="step-no">05</span><h3>Train a Random Forest</h3></div>
+          <p>
+            A Random Forest (300 trees) learns the relationship between the 14 features and real DPS, including interactions the formula ignores, like spread only mattering at range.
+          </p>
+          <div class="two-col">
+            <figure class="fig">
+              <img src="images/weapon-balance/03-rf-vs-formula.png" alt="Typical error by distance, formula versus Random Forest" loading="lazy" />
+              <figcaption>Error by distance (log scale). The model stays close to ×2 even at 80 m.</figcaption>
+            </figure>
+            <figure class="fig">
+              <img src="images/weapon-balance/04-predicted-vs-real.png" alt="Predicted versus real scatter plots for formula and Random Forest" loading="lazy" />
+              <figcaption>Predicted vs real on unseen weapons. The model's points follow the diagonal; the formula's do not.</figcaption>
+            </figure>
+          </div>
+        </article>
+
+        <!-- STEP 6 -->
+        <article class="panel step">
+          <div class="step-head"><span class="step-no">06</span><h3>Test it honestly: split by weapon</h3></div>
+          <div class="two-col">
+            <div>
+              <p>
+                Each weapon fought in many situations. If those fights are split randomly, the same weapon ends up in both training and testing, and the model is graded on weapons it has already seen. A designer needs predictions for <strong>new</strong> weapons, so I used <strong>GroupKFold by weapon</strong>: every weapon is tested exactly once, by a model that never saw it.
+              </p>
+            </div>
+            <div>
+              <div class="table-scroll"><table class="data-table">
+                <thead><tr><th>Split method</th><th>Typical error</th><th>R²</th></tr></thead>
+                <tbody>
+                  <tr><td>Random rows (leaky)</td><td>×1.51</td><td>0.88</td></tr>
+                  <tr><td>By weapon (honest)</td><td class="win">×1.78</td><td class="win">0.80</td></tr>
+                </tbody>
+              </table></div>
+              <p class="fine">The leaky split looks better, but that improvement is fake. All results on this page use the honest split.</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- STEP 7 -->
+        <article class="panel step">
+          <div class="step-head"><span class="step-no">07</span><h3>Combine the formula and the model</h3></div>
+          <p>
+            The formula already knows the easy part (damage × fire rate). What it misses is <strong>how many bullets actually hit</strong>. So Model B starts from the formula and lets the Random Forest learn only the hit efficiency on top of it.
+          </p>
+          <div class="two-col">
+            <figure class="fig">
+              <img src="images/weapon-balance/05-three-models.png" alt="Typical error by distance for formula, Model A and Model B" loading="lazy" />
+              <figcaption>Cross-validated error by distance for all three approaches.</figcaption>
+            </figure>
+            <div>
+              <div class="table-scroll"><table class="data-table">
+                <thead><tr><th>Approach</th><th>Typical error</th><th>R²</th></tr></thead>
+                <tbody>
+                  <tr><td>DPS formula</td><td>×6.00</td><td>−0.95</td></tr>
+                  <tr><td>Model A: Random Forest</td><td>×1.78</td><td>0.80</td></tr>
+                  <tr><td>Model B: Formula + Random Forest</td><td class="win">×1.64</td><td class="win">0.85</td></tr>
+                </tbody>
+              </table></div>
+              <p class="fine">5-fold cross-validation by weapon. Model B wins at every distance.</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- STEP 8 -->
+        <article class="panel step">
+          <div class="step-head"><span class="step-no">08</span><h3>Open the black box with SHAP</h3></div>
+          <p>
+            A prediction alone does not help a designer. SHAP splits every prediction into the contribution of each feature, so we can see <strong>which stats matter and in which direction</strong>.
+          </p>
+          <div class="two-col">
+            <figure class="fig">
+              <img src="images/weapon-balance/06-shap-importance.png" alt="SHAP mean absolute importance of each feature for hit efficiency" loading="lazy" />
+              <figcaption>Overall importance for hit efficiency. After distance, spread is far ahead of every other stat.</figcaption>
+            </figure>
+            <figure class="fig">
+              <img src="images/weapon-balance/07-shap-beeswarm.png" alt="SHAP beeswarm plot showing direction of each feature's effect" loading="lazy" />
+              <figcaption>Direction: red is a high value. High spread (red) pushes efficiency down hard.</figcaption>
+            </figure>
+          </div>
+          <figure class="fig fig-narrow">
+            <img src="images/weapon-balance/08-importance-by-distance.png" alt="Heatmap of weapon attribute importance by distance" loading="lazy" />
+            <figcaption>Spread's importance more than doubles from 10 m (0.45) to 80 m (0.96). Recoil also grows with distance.</figcaption>
+          </figure>
+        </article>
+
+        <!-- STEP 9 -->
+        <article class="panel step" id="situations">
+          <div class="step-head"><span class="step-no">09</span><h3>Which stat matters most in each situation?</h3></div>
+          <p>
+            A designer's real question is specific: "At 10 m against a moving target, what should I tune?" I trained a model on real DPS (so damage and fire rate are included), then averaged SHAP importance inside each of the 12 distance × target-speed situations.
+          </p>
+          <figure class="fig">
+            <img src="images/weapon-balance/12-stat-by-situation.png" alt="Heatmap of each attribute's share of importance in 12 situations" loading="lazy" />
+            <figcaption>Share of importance (%) for each stat in each situation. Each column adds up to 100%.</figcaption>
+          </figure>
+
+          <div class="table-scroll"><table class="data-table situation-table">
+            <thead>
+              <tr><th>Situation</th><th>1st</th><th>2nd</th><th>3rd</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>10 m, standing still</td><td><span class="pill pill-a">Pellets (shotgun) 31%</span></td><td><span class="pill pill-b">Spread 26%</span></td><td>Damage 15%</td></tr>
+              <tr><td>10 m, moving</td><td><span class="pill pill-a">Pellets (shotgun) 28–29%</span></td><td><span class="pill pill-b">Spread 26–30%</span></td><td>Damage 15–16%</td></tr>
+              <tr><td>20 m, standing still</td><td><span class="pill pill-b">Spread 42%</span></td><td>Pellets 16%</td><td>Damage 15%</td></tr>
+              <tr><td>20 m, moving</td><td><span class="pill pill-b">Spread 37–38%</span></td><td>Pellets 17%</td><td>Recoil 14%</td></tr>
+              <tr><td>50 m, standing still</td><td><span class="pill pill-b">Spread 51%</span></td><td><span class="pill pill-c">Recoil 22%</span></td><td>Pellets 6%</td></tr>
+              <tr><td>50 m, moving</td><td><span class="pill pill-b">Spread 53%</span></td><td><span class="pill pill-c">Recoil 20%</span></td><td>Damage 6%</td></tr>
+              <tr><td>80 m, standing still</td><td><span class="pill pill-b">Spread 53%</span></td><td><span class="pill pill-c">Recoil 20%</span></td><td>Damage 7%</td></tr>
+              <tr><td>80 m, moving</td><td><span class="pill pill-b">Spread 48–50%</span></td><td><span class="pill pill-c">Recoil 20–22%</span></td><td>Damage 7%</td></tr>
+            </tbody>
+          </table></div>
+          <p class="fine">"Moving" covers 10 and 15 m/s; the two speeds give almost the same ranking (at 10 m, pellets and spread are effectively tied). "Pellets" has only two values in this data, so it effectively means "is it a shotgun".</p>
+
+          <div class="callout">
+            <strong>Distance changes the answer; target speed hardly does.</strong>
+            Close range is decided by damage and pellets. From 20 m on, spread takes over, and at 50–80 m spread and recoil together make up about 70% of the importance, while damage drops to about 7%.
+          </div>
+        </article>
+
+        <!-- STEP 10 -->
+        <article class="panel step">
+          <div class="step-head"><span class="step-no">10</span><h3>Dig into spread and fire rate</h3></div>
+          <p>
+            SHAP showed fire rate mattered, but the overall effect looked flat. Splitting the data by spread revealed why: two opposite effects were cancelling out.
+          </p>
+          <div class="two-col">
+            <figure class="fig">
+              <img src="images/weapon-balance/09-spread-effect.png" alt="SHAP dependence plot of spread coloured by distance" loading="lazy" />
+              <figcaption>Hit efficiency falls steadily as spread grows, and falls faster at long distance (red).</figcaption>
+            </figure>
+            <figure class="fig">
+              <img src="images/weapon-balance/10-fire-rate-effect.png" alt="SHAP dependence plot of time between shots coloured by distance" loading="lazy" />
+              <figcaption>Very fast fire (short time between shots) lowers efficiency: recoil builds up before the bullets land.</figcaption>
+            </figure>
+          </div>
+          <div class="table-scroll"><table class="data-table">
+            <thead><tr><th>Spread group</th><th>10 m</th><th>20 m</th><th>50 m</th><th>80 m</th></tr></thead>
+            <tbody>
+              <tr><td>&lt; 0.7° (accurate)</td><td>0.52</td><td>0.63</td><td class="win">0.91</td><td>0.60</td></tr>
+              <tr><td>0.7–1.5°</td><td>0.82</td><td>0.91</td><td>0.77</td><td>0.45</td></tr>
+              <tr><td>1.5–3°</td><td>1.11</td><td>0.38</td><td>0.22</td><td>0.12</td></tr>
+              <tr><td>&gt; 3° (inaccurate)</td><td>0.46</td><td>0.69</td><td>0.06</td><td>0.20</td></tr>
+            </tbody>
+          </table></div>
+          <p class="fine">Measured gap in log efficiency between slow-firing and fast-firing weapons (no model involved). At 50 m, accurate weapons lose the most from firing fast; inaccurate ones barely notice.</p>
+        </article>
+
+        <!-- STEP 11 -->
+        <article class="panel step">
+          <div class="step-head"><span class="step-no">11</span><h3>Decide when to stop collecting data</h3></div>
+          <div class="two-col">
+            <figure class="fig">
+              <img src="images/weapon-balance/11-learning-curve.png" alt="Learning curve of Model A and Model B" loading="lazy" />
+              <figcaption>Error vs number of training weapons. Shaded bands show the spread across folds.</figcaption>
+            </figure>
+            <div>
+              <p>
+                The bot could run forever, so I needed evidence for when to stop. I retrained both models on 25%, 50%, 75% and 100% of the weapons and checked whether the error was still falling.
+              </p>
+              <p style="margin-top: 12px;">
+                At my last two checkpoints, the bot had added 14 more training weapons and Model B's error stayed at ×1.64. The curve had flattened, so I stopped the bot and spent the remaining time on analysis.
+              </p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= FINDINGS ================= -->
+    <section id="findings">
+      <div class="container section-shell">
+        <div class="section-head">
+          <div>
+            <div class="section-label">Findings</div>
+            <h2>What the Model Told the Designer</h2>
+          </div>
+        </div>
+
+        <div class="three-col">
+          <article class="panel">
+            <div class="finding-no">FINDING 01</div>
+            <h3>Spread Decides Long-Range Power</h3>
+            <p>From 20 m on, spread is the most important stat, and at 50–80 m it is about half of all importance. Raw damage barely matters at range.</p>
+            <div class="mini-bars" role="img" aria-label="Spread importance rises from 0.45 at 10 m to 0.96 at 80 m">
+              <div><i style="height: 56px;"></i>10m</div>
+              <div><i style="height: 79px;"></i>20m</div>
+              <div><i style="height: 112px;"></i>50m</div>
+              <div><i style="height: 120px;"></i>80m</div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="finding-no">FINDING 02</div>
+            <h3>Recoil Drags Down Accurate Guns</h3>
+            <p>At 50 m, accurate weapons lose the most from firing fast: recoil builds up and pulls their shots off target. Inaccurate weapons barely notice.</p>
+            <div class="tag-row">
+              <span class="tag">Fire rate × spread × distance</span>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="finding-no">FINDING 03</div>
+            <h3>Recoil Matters at Long Range</h3>
+            <p>Weapon recoil becomes significantly important in long-range combat: its share of importance doubles from about 10% at 10 m to over 20% at 50–80 m.</p>
+            <div class="tag-row">
+              <span class="tag">10% → 20%+</span>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <h3>What this means for balancing</h3>
+          <ul class="plain-list">
+            <li><strong>Close-range weapons:</strong> balance with damage and pellet count.</li>
+            <li><strong>Long-range weapons:</strong> balance with spread and recoil. Changing their damage does little.</li>
+            <li><strong>Recoil:</strong> a key tuning knob for long-range weapons, much less so for close-range ones.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= LIMITS ================= -->
+    <section id="next">
+      <div class="container section-shell">
+        <div class="section-head">
+          <div>
+            <div class="section-label">Limits &amp; Next</div>
+            <h2>What Comes Next</h2>
+          </div>
+        </div>
+
+        <div class="contact-grid">
+          <div class="contact-card">
+            <h3>Known Limits</h3>
+            <ul class="plain-list">
+              <li>The bot aims perfectly, so it is a "best case" player, not a real one.</li>
+              <li>Targets strafe in a fixed pattern; very fast targets were left out because nothing could hit them.</li>
+              <li>Fights where no bullet ever hit cannot be put on a log scale, so the model never sees a completely useless weapon.</li>
+              <li>Recoil control was only varied by ±500. The bot dual-wields, and that range was too small to offset two weapons' recoil, so this test cannot say how much recoil control matters.</li>
+              <li>The importance numbers show how much a stat matters, not whether raising it is good or bad; the SHAP direction plots answer that.</li>
+            </ul>
+          </div>
+
+          <div class="contact-card contact-highlight">
+            <h3>Next Steps</h3>
+            <ul>
+              <li>Compare the bot's results with real player data.</li>
+              <li>Run the model as an automatic balance check on every build.</li>
+              <li>Test design changes before making them: predict, then let the bot confirm.</li>
+            </ul>
+            <div class="tag-row">
+              <span class="tag">Unity</span>
+              <span class="tag">Machine Learning</span>
+              <span class="tag">Game Design</span>
+            </div>
+            <div class="project-links">
+              <a class="text-link" href="index.html#projects" style="color: var(--gold);">Back to all projects</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-box">
+        <span><strong>Jin Chan Portfolio</strong> · Diva Ex Machina: Weapon Balance with Machine Learning</span>
+        <span>Ontario Tech University</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
